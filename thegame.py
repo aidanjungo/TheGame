@@ -1,7 +1,7 @@
 import random
 
 from strategies.strategy_simple_2_cards import simple_2_cards
-from user_interface import ask_player
+from strategies.user_interface import ask_player
 
 
 class Table:
@@ -247,7 +247,7 @@ if __name__ == '__main__':
     display_output = True
     n_player = 5
     strategy = 'simple_2_cards'
-    strategy = 'user_interface'
+    #strategy = 'user_interface'
 
     # Set TheGame
     players, table = set_TheGame()
