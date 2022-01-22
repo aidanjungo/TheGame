@@ -6,7 +6,7 @@ from strategies.user_interface import ask_player
 
 
 class Table:
-    """Class to difine what is on the table during TheGame.
+    """Class to define what is on the table during TheGame.
 
     Attributes:
         piles (dict): Piles on the table.
@@ -70,11 +70,11 @@ class Table:
 
 
 class Player:
-    """Class to difine a player.
+    """Class to define a player.
 
     Attributes:
         hand (list): List of cards in hand.
-        num (int): Number of player.
+        n_players (int): Number of player.
 
     """
 
