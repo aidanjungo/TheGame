@@ -33,7 +33,7 @@ def caluculate_diffs(piles, hand):
         if card in copy_hand:
 
             copy_hand.remove(card)
-            diffs_list_new.append((d, p, card))
+            diffs_list_new.append((int(d), p, card))
 
     return diffs_list_new
 
