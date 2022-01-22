@@ -7,7 +7,7 @@ def ask_player(player):
 
         print('\nType "Quit", "Q" or "q" if you cannot play!')
 
-        cards = input("Enter list of cards (coma serparaded): ")
+        cards = input("Enter list of cards (coma separated): ")
 
         if cards in ["Quit", "Q", "q"]:
             return False, False, True

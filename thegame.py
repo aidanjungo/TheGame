@@ -1,8 +1,11 @@
 import random
 
+from reinforcement_learning.nn import NeuralNetwork
+
 from strategies.strategy_simple import strategy_simple
 from strategies.strategy_n_diff import strategy_n_diff
 from strategies.user_interface import ask_player
+from strategies.strategy_rl import strategy_rl
 
 
 class Table:
@@ -167,6 +170,9 @@ def play_TheGame(players, table, strategy, acceptable_diff=1, disp=False):
 
     """
 
+    if strategy == "strategy_rl":
+        nn = NeuralNetwork(len(players))
+
     while True:
 
         for player in players:
@@ -209,6 +215,9 @@ def play_TheGame(players, table, strategy, acceptable_diff=1, disp=False):
                 elif strategy == "strategy_n_diff":
                     piles, cards, end_game = strategy_n_diff(player, table, acceptable_diff)
 
+                elif strategy == "strategy_rl":
+                    piles, cards, end_game = strategy_rl(player, table, nn)
+
                 else:
                     raise ValueError("Strategy not found")
 
@@ -221,6 +230,7 @@ def play_TheGame(players, table, strategy, acceptable_diff=1, disp=False):
                     output(f"You should play minimum {table.cards_to_play()} cards", disp)
                     valid_move = False
                     continue
+
                 if len(cards) > len(player.hand):
                     output("You do not have enough cards", disp)
                     valid_move = False
@@ -252,10 +262,11 @@ if __name__ == "__main__":
 
     # Options
     display_output = True
-    n_player = 5
+    n_player = 1
     # strategy = 'strategy_simple'
     # strategy = 'user_interface'
-    strategy = "strategy_n_diff"
+    # strategy = "strategy_n_diff"
+    strategy = 'strategy_rl'
     acceptable_diff = 10
 
     # Set TheGame

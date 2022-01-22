@@ -5,7 +5,7 @@
 import numpy as np
 
 
-def caluculate_diffs(piles, hand):
+def calculate_diffs(piles, hand):
     """Calculate the diffs between the cards in hand and the piles.
     Return a list of tuples (diff, pile, card) ordered by diff.
     """
@@ -69,7 +69,7 @@ def strategy_n_diff(player, table, acceptable_diff):
     if table.cards_to_play() == 1:
         acceptable_diff = 1
 
-    diffs = caluculate_diffs(piles, hand)
+    diffs = calculate_diffs(piles, hand)
 
     for d, p, c in diffs:
         if len(cards_to_play) < table.cards_to_play() or d <= acceptable_diff:

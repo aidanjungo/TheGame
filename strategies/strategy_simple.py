@@ -1,6 +1,6 @@
 # Not well implemented, but this is a good strategy anyway.
 
-def caluculate_diffs(table, player):
+def calculate_diffs(table, player):
 
     diffs = {1: [], 2: [], 3: [], 4: []}
 
@@ -15,7 +15,7 @@ def caluculate_diffs(table, player):
 
 
 def strategy_simple(player, table):
-    """This stratery just play the minimum number of card.
+    """This strategy just play the minimum number of card.
     If possible card(s) with -10/10 and complete with card(s) with the minimum difference
     with the piles.
 
@@ -24,7 +24,7 @@ def strategy_simple(player, table):
     cards = []
     piles = []
 
-    diffs = caluculate_diffs(table, player)
+    diffs = calculate_diffs(table, player)
 
     cards_played = 0
 
