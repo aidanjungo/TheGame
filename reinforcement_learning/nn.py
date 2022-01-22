@@ -18,16 +18,19 @@ class NeuralNetwork(nn.Module):
             hidden_layers (tuple of int): number of neuron in hidden layers
         """
         super(NeuralNetwork, self).__init__()
+        self.n_cards = n_cards
+        self.conv = nn.Conv1d(2, 1, 1)
+
         self.sequential = nn.Sequential()
         self.id_model = 0
         layers = []
-        layers.append(nn.Linear(4 + n_cards, hidden_layers[0]))
+        layers.append(nn.Linear(4 + n_cards + 1, hidden_layers[0]))
 
         for i, input_len in enumerate(hidden_layers):
             if i + 1 < len(hidden_layers):
                 output_len = hidden_layers[i + 1]
             else:
-                output_len = 2 * n_cards
+                output_len = 9
 
             layers.append(nn.Sigmoid())
             layers.append(nn.Linear(input_len, output_len))
@@ -36,15 +39,23 @@ class NeuralNetwork(nn.Module):
 
         self.sequential = nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, states):
+        piles, hands, n_cards = states
+        n_data = piles.size(0)
+
+        # Convolution for the cards
+        hands_conv = self.conv(hands).resize(n_data, self.n_cards)
+
+        # Sequential for all the data
+        x = torch.cat((piles, hands_conv, n_cards), 1)
         return self.sequential(x)
 
     def save(self):
         os.makedirs('saved_models', exist_ok=True)
-        torch.save(self.sequential, 'saved_models/' + str(self.id_model) + '.pth')
+        torch.save(self.sequential, 'saved_models/' + str(self.n_cards) + '_' + str(self.id_model) + '.pth')
 
     def load(self, id_model=0):
-        self.sequential = torch.load('saved_models/' + str(id_model) + '.pth')
+        self.sequential = torch.load('saved_models/' + str(self.n_cards) + '_' + str(id_model) + '.pth')
         self.sequential.eval()
         self.id_model = id_model
 
@@ -54,11 +65,17 @@ if __name__ == "__main__":
     nn = NeuralNetwork(n_cards)
     print(nn)
 
-    states = torch.FloatTensor(10 * [[1, 1, 100, 100] + [i for i in range(n_cards)]])
+    # states = torch.FloatTensor(10 * [
+    #     [1, 1, 100, 100] + [i for i in range(n_cards)] + [0 for i in range(n_cards)] + [2]])
     # states = states.resize(len(states), 1)
+    states = (
+        torch.FloatTensor(10 * [[1, 1, 100, 100]]),
+        torch.FloatTensor(10 * [[[i for i in range(n_cards)], [0 for i in range(n_cards)]]]),
+        torch.FloatTensor(10 * [[2]]),
+    )
     print(states)
 
     print(nn(states))
 
     nn.save()
-    nn.load(id_model=1)
+    nn.load(id_model=0)

@@ -131,5 +131,10 @@ dmypy.json
 # Mac
 .DS_Store
 
+# Models
+saved_models/
+
+# Pycharm
+.idea/
 
 *.prof

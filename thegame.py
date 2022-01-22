@@ -5,7 +5,7 @@ from reinforcement_learning.nn import NeuralNetwork
 from strategies.strategy_simple import strategy_simple
 from strategies.strategy_n_diff import strategy_n_diff
 from strategies.user_interface import ask_player
-from strategies.strategy_rl import strategy_rl
+from strategies.strategy_rl import StrategyRL
 
 
 class Table:
@@ -171,7 +171,7 @@ def play_TheGame(players, table, strategy, acceptable_diff=1, disp=False):
     """
 
     if strategy == "strategy_rl":
-        nn = NeuralNetwork(len(players))
+        strategy_rl = StrategyRL(N_CARDS[len(players)])
 
     while True:
 
@@ -216,7 +216,7 @@ def play_TheGame(players, table, strategy, acceptable_diff=1, disp=False):
                     piles, cards, end_game = strategy_n_diff(player, table, acceptable_diff)
 
                 elif strategy == "strategy_rl":
-                    piles, cards, end_game = strategy_rl(player, table, nn)
+                    piles, cards, end_game = strategy_rl.chose_coups(player, table)
 
                 else:
                     raise ValueError("Strategy not found")
@@ -251,6 +251,10 @@ def play_TheGame(players, table, strategy, acceptable_diff=1, disp=False):
 
             while table.deck and len(player.hand) < N_CARDS[len(players)]:
                 player.draw(table.deal())
+
+    if strategy == "strategy_rl":
+        # Train the NN
+        pass
 
 
 # Rules
