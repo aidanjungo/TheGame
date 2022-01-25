@@ -207,7 +207,9 @@ def play_TheGame(players, table, strategy, acceptable_diff=1, disp=False):
                     piles, cards, end_game = strategy_simple(player, table)
 
                 elif strategy == "strategy_n_diff":
-                    piles, cards, end_game = strategy_n_diff(player, table, acceptable_diff)
+                    piles, cards, end_game = strategy_n_diff(
+                        player, table, acceptable_diff
+                    )
 
                 else:
                     raise ValueError("Strategy not found")
@@ -218,7 +220,9 @@ def play_TheGame(players, table, strategy, acceptable_diff=1, disp=False):
                     return score
 
                 if len(cards) < table.cards_to_play():
-                    output(f"You should play minimum {table.cards_to_play()} cards", disp)
+                    output(
+                        f"You should play minimum {table.cards_to_play()} cards", disp
+                    )
                     valid_move = False
                     continue
                 if len(cards) > len(player.hand):
@@ -252,11 +256,11 @@ if __name__ == "__main__":
 
     # Options
     display_output = True
-    n_player = 5
+    n_player = 3
     # strategy = 'strategy_simple'
     # strategy = 'user_interface'
     strategy = "strategy_n_diff"
-    acceptable_diff = 10
+    acceptable_diff = 5
 
     # Set TheGame
     players, table = set_TheGame(n_player)
