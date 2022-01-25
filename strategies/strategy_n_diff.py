@@ -1,11 +1,10 @@
 # Possible improvements:
-# - Check card with diff of 10 before to play
-# - Probably some loops could be avoid to run faster
+# - Improve code to run faster
 
 import numpy as np
 
 
-def caluculate_diffs(piles, hand):
+def calculate_diffs(piles, hand):
     """Calculate the diffs between the cards in hand and the piles.
     Return a list of tuples (diff, pile, card) ordered by diff.
     """
@@ -39,8 +38,9 @@ def caluculate_diffs(piles, hand):
 
 
 def strategy_n_diff(player, table, acceptable_diff):
-    """This stratery try to:
+    """This strategy try to:
     - first to play the card with diff of 10.
+    Then loop until min number of cards is reach and not bellow acceptable_diff
     - play card with the minimum diff until the number of card to play is reached
     - play additional card if the diff is less than the acceptable_diff
     - check if the card with diff of 10 is playable
@@ -59,7 +59,7 @@ def strategy_n_diff(player, table, acceptable_diff):
         for c in hand:
             card = piles[p] + np.sign(p - 2.5) * 10
             if card in hand:
-                cards_to_play.append(card)
+                cards_to_play.append(int(card))
                 piles_to_play.append(p)
                 hand.remove(card)
                 piles[p] = card
@@ -69,27 +69,34 @@ def strategy_n_diff(player, table, acceptable_diff):
     if table.cards_to_play() == 1:
         acceptable_diff = 1
 
-    diffs = caluculate_diffs(piles, hand)
+    playing = True
+    while playing:
 
-    for d, p, c in diffs:
-        if len(cards_to_play) < table.cards_to_play() or d <= acceptable_diff:
-            piles_to_play.append(p)
-            cards_to_play.append(c)
-            hand.remove(c)
-            piles[p] = c
-        else:
+        diffs = calculate_diffs(piles, hand)
+
+        if not diffs:
             break
 
-    for p in range(1, 5):
-        for c in hand:
-            card = piles[p] + np.sign(p - 2.5) * 10
-            if card in hand:
-                cards_to_play.append(card)
-                piles_to_play.append(p)
-                hand.remove(card)
-                piles[p] = card
-            else:
-                break
+        if len(cards_to_play) >= table.cards_to_play():
+            if diffs[0][0] > acceptable_diff:
+                playing = False
+
+        if playing:
+            piles_to_play.append(diffs[0][1])
+            cards_to_play.append(diffs[0][2])
+            hand.remove(diffs[0][2])
+            piles[diffs[0][1]] = diffs[0][2]
+
+        for p in range(1, 5):
+            for c in hand:
+                card = piles[p] + np.sign(p - 2.5) * 10
+                if card in hand:
+                    cards_to_play.append(int(card))
+                    piles_to_play.append(p)
+                    hand.remove(card)
+                    piles[p] = card
+                else:
+                    break
 
     if len(cards_to_play) < table.cards_to_play():
         end_game = True
