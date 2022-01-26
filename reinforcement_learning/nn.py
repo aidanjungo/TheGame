@@ -2,6 +2,9 @@
 Neural Network to play the game.
 """
 import os
+import re
+import numpy as np
+
 import torch
 from torch import nn
 
@@ -9,7 +12,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class NeuralNetwork(nn.Module):
-    def __init__(self, n_cards, hidden_layers=(20, 20)):
+    def __init__(self, n_cards, hidden_layers=(50, 100, 50)):
         """
         Instanciate the neural network
 
@@ -35,7 +38,7 @@ class NeuralNetwork(nn.Module):
             layers.append(nn.Sigmoid())
             layers.append(nn.Linear(input_len, output_len))
 
-        layers.append(nn.Softmax())
+        layers.append(nn.Softmax(1))
 
         self.sequential = nn.Sequential(*layers)
 
@@ -52,12 +55,26 @@ class NeuralNetwork(nn.Module):
 
     def save(self):
         os.makedirs('saved_models', exist_ok=True)
-        torch.save(self.sequential, 'saved_models/' + str(self.n_cards) + '_' + str(self.id_model) + '.pth')
+        torch.save(
+            self.sequential,
+            os.path.join('saved_models', str(self.n_cards) + '_' + str(self.id_model) + '.pth'))
 
     def load(self, id_model=0):
-        self.sequential = torch.load('saved_models/' + str(self.n_cards) + '_' + str(id_model) + '.pth')
+        self.sequential = torch.load(
+            os.path.join('saved_models', str(self.n_cards) + '_' + str(id_model) + '.pth'))
         self.sequential.eval()
-        self.id_model = id_model
+        self.id_model = id_model + 1
+
+    def load_last(self):
+        if 'saved_models' in os.listdir(os.curdir):
+            list_files = os.listdir('saved_models')
+            list_ids = [int(f[2:-4]) for f in list_files if re.match(str(self.n_cards) + '_[0-9]+.pth', f) is not None]
+            if len(list_ids) > 0:
+                id_last_model = np.max(list_ids)
+                self.load(id_model=id_last_model)
+                for id in list_ids:
+                    if id_last_model - 10 > id:
+                        os.remove(os.path.join('saved_models', str(self.n_cards) + '_' + str(id) + '.pth'))
 
 
 if __name__ == "__main__":
@@ -79,3 +96,4 @@ if __name__ == "__main__":
 
     nn.save()
     nn.load(id_model=0)
+    nn.load_last()

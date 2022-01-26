@@ -1,6 +1,5 @@
 import random
-
-from reinforcement_learning.nn import NeuralNetwork
+import numpy as np
 
 from strategies.strategy_simple import strategy_simple
 from strategies.strategy_n_diff import strategy_n_diff
@@ -218,6 +217,14 @@ def play_TheGame(players, table, strategy, acceptable_diff=1, disp=False):
                 elif strategy == "strategy_rl":
                     piles, cards, end_game = strategy_rl.chose_coups(player, table)
 
+                    if end_game:
+                        score = calculate_points(table, players)
+                        loss = np.nan
+
+                        if score < 30:
+                            # Train the NN
+                            loss = strategy_rl.train_nn(score)
+
                 else:
                     raise ValueError("Strategy not found")
 
@@ -252,9 +259,7 @@ def play_TheGame(players, table, strategy, acceptable_diff=1, disp=False):
             while table.deck and len(player.hand) < N_CARDS[len(players)]:
                 player.draw(table.deal())
 
-    if strategy == "strategy_rl":
-        # Train the NN
-        pass
+
 
 
 # Rules
@@ -273,8 +278,9 @@ if __name__ == "__main__":
     strategy = 'strategy_rl'
     acceptable_diff = 10
 
-    # Set TheGame
-    players, table = set_TheGame(n_player)
+    for _ in range(1000):
+        # Set TheGame
+        players, table = set_TheGame(n_player)
 
-    # Play TheGame
-    play_TheGame(players, table, strategy, acceptable_diff, display_output)
+        # Play TheGame
+        play_TheGame(players, table, strategy, acceptable_diff, display_output)

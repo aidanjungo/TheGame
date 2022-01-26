@@ -5,6 +5,9 @@ import random
 import numpy as np
 
 import torch
+from torch.utils.data import Dataset, DataLoader
+from torch import optim
+import torch.nn.functional as F
 
 from reinforcement_learning.nn import NeuralNetwork
 
@@ -53,14 +56,32 @@ def get_possible_coups(hand, piles, cards_to_play):
     return actions
 
 
+class TheGameDataset(Dataset):
+
+    def __init__(self, nn_data):
+        self.nn_data = nn_data
+
+    def __len__(self):
+        return len(self.nn_data[list(self.nn_data.keys())[0]])
+
+    def __getitem__(self, idx):
+        piles = torch.FloatTensor(self.nn_data['piles'][idx])
+        hands = torch.FloatTensor(self.nn_data['hands'][idx])
+        n_cards = torch.FloatTensor(self.nn_data['n_cards'][idx])
+        coup = torch.FloatTensor(self.nn_data['coup'][idx])
+        return piles, hands, n_cards, coup
+
+
 class StrategyRL:
 
-    def __init__(self, n_cards, epsilon=0.2):
+    def __init__(self, n_cards, epsilon=0.3):
         self.n_cards = n_cards
         self.nn = NeuralNetwork(n_cards)
+        self.nn.load_last()
         self.epsilon = epsilon
+        self.score = np.nan
 
-        self.dataset = {'piles': [], 'hands': [], 'n_cards': [], 'coup': []}
+        self.nn_data = {'piles': [], 'hands': [], 'n_cards': [], 'coup': []}
 
     def chose_coups(self, player, table):
         hand = np.array(player.hand.copy())
@@ -99,22 +120,23 @@ class StrategyRL:
 
                 # Random coup chosen
                 chosen_coup = random.choice(list(coups.keys()))
-                print(chosen_coup)
 
             else:
 
                 # Best NN choice
                 choice_stat = self.nn((
-                    torch.FloatTensor([nn_piles]), torch.FloatTensor([nn_hand]), torch.FloatTensor([nn_n_cards])))
+                    torch.FloatTensor(np.array([nn_piles])),
+                    torch.FloatTensor(np.array([nn_hand])),
+                    torch.FloatTensor(np.array([nn_n_cards]))))
                 choice_stat = choice_stat.detach().numpy().ravel()
                 choice_stat = [c if n in coups.keys() else 0. for n, c in zip(OUTPUT_ORDER, choice_stat)]
                 chosen_coup = OUTPUT_ORDER[np.argmax(choice_stat)]
 
             # Save information
-            self.dataset['piles'].append(nn_piles)
-            self.dataset['hands'].append(nn_hand)
-            self.dataset['n_cards'].append(nn_n_cards)
-            self.dataset['coup'].append(chosen_coup)
+            self.nn_data['piles'].append(nn_piles)
+            self.nn_data['hands'].append(nn_hand)
+            self.nn_data['n_cards'].append(nn_n_cards)
+            self.nn_data['coup'].append([coup == chosen_coup for coup in OUTPUT_ORDER])
 
             # If the coup is to stop
             if chosen_coup == 'stop':
@@ -133,3 +155,38 @@ class StrategyRL:
             # print()
 
         return out_piles, out_cards, end_game
+
+    def loss(self, choice_stat, coup):
+        return F.cross_entropy(choice_stat, coup) + self.score
+
+    def train_nn(self, score, n_epoch=50):
+        self.score = score
+
+        dataset = TheGameDataset(self.nn_data)
+        dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
+
+        optimizer = optim.Adam(self.nn.parameters(), lr=1e-2)
+
+        loss_epoch = []
+        for epoch in range(n_epoch):
+
+            loss_train = []
+            for nn_piles, nn_hand, nn_n_cards, coup in dataloader:
+
+                optimizer.zero_grad()
+                choice_stat = self.nn((nn_piles, nn_hand, nn_n_cards))
+                loss_train_subset = self.loss(choice_stat, coup)
+                loss_train_subset.backward()
+                optimizer.step()
+
+                loss_train.append(loss_train_subset)
+
+            loss = torch.sum(torch.stack(loss_train))
+
+            print('epoch %d - loss train: %.6f' % (epoch, loss))
+            loss_epoch.append(loss)
+            epoch += 1
+
+        self.nn.save()
+
+        return loss_epoch
